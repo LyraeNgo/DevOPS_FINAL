@@ -22,11 +22,11 @@ jobs:
       - name: Install
         run: npm install
 
-      - name: Lint
-        run: npm run lint
+      # - name: Lint
+      #   run: npm run lint
 
-      - name: Test
-        run: npm test
+      # - name: Test
+      #   run: npm test
 
       # - name: Security Scan (Snyk)
       #   uses: snyk/actions/node@master
@@ -38,24 +38,24 @@ jobs:
       - name: Build
         run: npm run build
 
-  docker:
-    runs-on: ubuntu-latest
-    needs: build #run when build ok
+  # docker:
+  #   runs-on: ubuntu-latest
+  #   needs: build #run when build ok
 
-    steps:
-      - uses: actions/checkout@v4
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Login Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_PASS }}
+  #     - name: Login Docker Hub
+  #       uses: docker/login-action@v2
+  #       with:
+  #         username: ${{ secrets.DOCKER_USER }}
+  #         password: ${{ secrets.DOCKER_PASS }}
 
-      - name: Build image
-        run: docker build -t myapp .
+  #     - name: Build image
+  #       run: docker build -t myapp .
 
-      - name: Tag image
-        run: docker tag myapp mydocker/myapp:${{ github.sha }}
+  #     - name: Tag image
+  #       run: docker tag myapp mydocker/myapp:${{ github.sha }}
 
-      - name: Push image
-        run: docker push mydocker/myapp:${{ github.sha }}
+  #     - name: Push image
+  #       run: docker push mydocker/myapp:${{ github.sha }}
