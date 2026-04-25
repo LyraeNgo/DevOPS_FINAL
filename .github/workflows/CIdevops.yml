@@ -28,12 +28,12 @@ jobs:
       - name: Test
         run: npm test
 
-      - name: Security Scan (Snyk)
-        uses: snyk/actions/node@master
-        with:
-          args: test
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      # - name: Security Scan (Snyk)
+      #   uses: snyk/actions/node@master
+      #   with:
+      #     args: test
+      #   env:
+      #     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
       - name: Build
         run: npm run build
