@@ -21,6 +21,7 @@ export default defineConfig([
     languageOptions: {
       globals: {
         ...globals.browser,
+        bootstrap: "readonly",
       },
     },
   },
@@ -30,7 +31,7 @@ export default defineConfig([
     files: ["test/**/*.js"],
     languageOptions: {
       globals: {
-        ...globals.jest, 
+        ...globals.jest,
       },
     },
   },
