@@ -1,20 +1,23 @@
-# use an official Node.js runtime as a parent image
+# Base image (secure hơn alpine)
 FROM node:20-slim
 
-# Define the working directory in the container
+# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json to the working directory
+# Copy package files trước (tận dụng cache)
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install only production dependencies
+RUN npm ci --only=production
 
-# Copy the rest of the application code to the working directory
+# Copy source code
 COPY . .
 
-# Expose the port that the application will run on
+# Use non-root user (security best practice)
+USER node
+
+# Expose port
 EXPOSE 3000
 
-# Define the command to run the application
-CMD ["npm", "start"]
+# Run app
+CMD ["node", "main.js"]
