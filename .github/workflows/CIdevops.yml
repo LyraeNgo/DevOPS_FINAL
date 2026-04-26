@@ -11,10 +11,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout
       - uses: actions/checkout@v4
 
-      # 2. Setup Node + cache
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
