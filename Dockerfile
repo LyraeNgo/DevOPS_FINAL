@@ -1,23 +1,23 @@
-# Base image (secure hơn alpine)
-FROM node:20-slim
+# Stage 1: build
+FROM node:20-alpine AS builder
 
-# Set working directory
 WORKDIR /app
-
-# Copy package files trước (tận dụng cache)
 COPY package*.json ./
+RUN npm ci --omit=dev
 
-# Install only production dependencies
-RUN npm ci --only=production
-
-# Copy source code
 COPY . .
 
-# Use non-root user (security best practice)
-USER node
+# Stage 2: runtime (nhẹ + secure)
+FROM node:20-alpine
 
-# Expose port
+WORKDIR /app
+
+# chỉ copy cần thiết
+COPY --from=builder /app ./
+
+# tạo user không phải root (security tốt hơn)
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
 EXPOSE 3000
-
-# Run app
-CMD ["node", "main.js"]
+CMD ["npm", "start"]

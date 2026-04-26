@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   web:
-    image: hieuduong1/devops-midterm-web:latest
+    image: hieuduong1/myapp:latest
     container_name: web_app
     restart: unless-stopped
     ports:
@@ -32,4 +32,4 @@ volumes:
 
 networks:
   devops_net:
-    driver: bridge
+    driver: bridge  
