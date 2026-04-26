@@ -69,6 +69,6 @@ jobs:
           script: |
             export KUBECONFIG=~/.kube/config
             export IMAGE_TAG=${{ github.sha }}
-            cd /home/ubuntu/DevOPS_FINAL
-            envsubst '$IMAGE_TAG' < app.yaml | kubectl apply -f -
+            # Thử đường dẫn tuyệt đối thẳng vào file app.yaml ở thư mục ngoài (home)
+            envsubst '$IMAGE_TAG' < /home/ubuntu/app.yaml | kubectl apply -f -
             kubectl rollout status deployment/midterm-web-deployment -n default
