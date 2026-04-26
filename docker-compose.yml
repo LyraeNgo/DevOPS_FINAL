@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  web:
+    image: hieuduong1/devops-midterm-web:latest
+    container_name: web_app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      - ./public/uploads:/app/public/uploads
+    depends_on:
+      - mongodb
+    networks:
+      - devops_net
+
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb_server
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - devops_net
+
+volumes:
+  mongo_data:
+
+networks:
+  devops_net:
+    driver: bridge
