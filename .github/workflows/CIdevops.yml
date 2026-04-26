@@ -69,6 +69,8 @@ jobs:
           script: |
             export KUBECONFIG=~/.kube/config
             export IMAGE_TAG=${{ github.sha }}
-            envsubst < k8s/deployment.yaml | kubectl apply -f -
-            kubectl rollout restart deployment/midterm-web-deployment -n default           
+            cd /home/ubuntu/DevOPS_FINAL
+            # Pull code mới nhất trên server để lấy file k8s/deployment.yaml (nếu cần)
+            # git pull origin main 
+            envsubst '$IMAGE_TAG' < deployment.yaml | kubectl apply -f -
             kubectl rollout status deployment/midterm-web-deployment -n default
