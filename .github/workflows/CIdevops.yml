@@ -83,4 +83,4 @@ jobs:
             cd /home/ubuntu/DevOPS_FINAL
             echo "IMAGE_TAG=${{ github.sha }}" > .env
             docker pull hieuduong1/myapp:${{ github.sha }}
-            docker-compose up -d --force-recreate
+            docker compose up -d --force-recreate
