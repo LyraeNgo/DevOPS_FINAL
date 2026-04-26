@@ -85,3 +85,4 @@ jobs:
             docker pull hieuduong1/myapp:latest
             docker-compose down
             docker-compose up -d
+            kubectl rollout restart deployment/midterm-web-deployment -n default
