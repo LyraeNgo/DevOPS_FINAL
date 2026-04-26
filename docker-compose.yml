@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   web:
-    image: hieuduong1/myapp:latest
+    image: hieuduong1/myapp:${IMAGE_TAG}
     container_name: web_app
     restart: unless-stopped
     ports:
