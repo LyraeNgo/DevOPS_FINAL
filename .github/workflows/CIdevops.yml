@@ -7,6 +7,7 @@ on:
     branches: ["main"]
 
 jobs:
+
 # ================= CI =================
   build:
     runs-on: ubuntu-latest
@@ -20,16 +21,22 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci
-      - run: npm run lint
-      - run: npm test
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Snyk Scan
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Security scan (Snyk)
         run: npx snyk test --severity-threshold=high
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-      - run: npm run build
+      - name: Build
+        run: npm run build
 
 
 # ================= DOCKER =================
@@ -46,22 +53,18 @@ jobs:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
 
-      # Build + tag
-      - name: Build image
+      - name: Build Docker image
         run: |
-          docker build --no-cache -t hieuduong1/myapp:${{ github.sha }} .
-          docker tag hieuduong1/myapp:${{ github.sha }} hieuduong1/myapp:latest
+          docker build -t hieuduong1/myapp:${{ github.sha }} .
 
-      # Trivy scan
-      - name: Trivy Scan
-        uses: aquasecurity/trivy-action@v0.19.0
+      - name: Scan image (Trivy)
+        uses: aquasecurity/trivy-action@v0.16.0
         with:
           image-ref: hieuduong1/myapp:${{ github.sha }}
           exit-code: 1
           severity: CRITICAL
           scanners: vuln
 
-      # Push
       - name: Push image
         run: |
           docker push hieuduong1/myapp:${{ github.sha }}
@@ -73,15 +76,40 @@ jobs:
     needs: docker
 
     steps:
-      - name: Deploy to Server
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH }}
-          script: |
-            cd /home/ubuntu/DevOPS_FINAL
-            echo "IMAGE_TAG=${{ github.sha }}" > .env
-            docker pull hieuduong1/myapp:${{ github.sha }}
-            docker compose down
-            docker compose up -d --force-recreate
+      - uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
+
+      # Apply base config
+      - name: Apply manifests
+        run: |
+          kubectl apply -f k8s/
+
+      # Update image (rolling update)
+      - name: Deploy new version
+        run: |
+          kubectl set image deployment/myapp \
+          web-container=hieuduong1/myapp:${{ github.sha }}
+
+      # Check rollout + AUTO ROLLBACK
+      - name: Verify rollout (auto rollback if fail)
+        run: |
+          kubectl rollout status deployment/myapp || \
+          (echo "❌ Rollout failed → rolling back..." && \
+           kubectl rollout undo deployment/myapp && exit 1)
+
+      # Show rollout history (bonus điểm)
+      - name: Show rollout history
+        run: |
+          kubectl rollout history deployment/myapp
+
+      # Debug pods
+      - name: Show pods
+        run: |
+          kubectl get pods -o wide
