@@ -81,7 +81,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH }}
           script: |
-            cd /home/ubuntu/app
+            cd /home/ubuntu/DevOPS_FINAL
             docker pull hieuduong1/myapp:latest
             docker-compose down
             docker-compose up -d
