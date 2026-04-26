@@ -69,6 +69,6 @@ jobs:
           script: |
             export KUBECONFIG=~/.kube/config
             export IMAGE_TAG=${{ github.sha }}
-            envsubst < k8s/deployment.yaml | kubectl apply -f -
+            envsubst '$IMAGE_TAG' < k8s/deployment.yaml | kubectl apply -f -
             kubectl rollout restart deployment/midterm-web-deployment -n default           
             kubectl rollout status deployment/midterm-web-deployment -n default
