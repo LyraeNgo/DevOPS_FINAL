@@ -4,7 +4,7 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "build": "npm prune --production && mkdir -p dist && cp -r . dist",
+    "build": "npm prune --omit=dev && mkdir -p dist && rsync -av --exclude=dist --exclude=node_modules . dist",
     "start": "node main.js",
     "dev": "nodemon main.js",
     "test": "jest",
