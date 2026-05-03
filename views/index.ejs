@@ -1,42 +1,58 @@
 <%- include('partials/head') %>
 
-  <div class="mb-3 d-flex justify-content-end">
+  <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+    <div class="text-muted small">
+      Manage your product catalog
+      <span class="badge text-bg-light border ms-1"><%= products.length %> items</span>
+    </div>
     <button id="btn-add" class="btn btn-primary btn-sm">Add Product</button>
   </div>
 
-  <h1>hello</h1>
-  <h1>Test docker</h1>
-
-  <div class="table-responsive">
-    <table class="table table-striped table-bordered align-middle">
-      <thead class="table-dark">
-        <tr>
-          <th style="width:80px">Photo</th>
-          <th>Name</th>
-          <th>Price</th>
-          <th>Color</th>
-          <th>Description</th>
-          <th style="width:140px">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="product-table">
-        <% products.forEach(function(p){ %>
-          <tr data-id="<%= p.id %>" data-image="<%= p.imageUrl || '' %>">
-            <td>
-              <img src="<%= p.imageUrl && p.imageUrl.length ? p.imageUrl : '/images/placeholder-80.png' %>" alt="thumb" class="img-thumbnail" style="width:60px;height:60px;object-fit:cover">
-            </td>
-            <td><%= p.name %></td>
-            <td><%= p.price %></td>
-            <td><%= p.color %></td>
-            <td><%= p.description || '' %></td>
-            <td>
-              <button class="btn btn-sm btn-outline-secondary btn-edit">Edit</button>
-              <button class="btn btn-sm btn-outline-danger btn-delete">Delete</button>
-            </td>
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-striped table-hover align-middle mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th scope="col" style="width:80px">Photo</th>
+            <th scope="col">Name</th>
+            <th scope="col" class="text-end">Price</th>
+            <th scope="col">Color</th>
+            <th scope="col">Description</th>
+            <th scope="col" style="width:150px">Actions</th>
           </tr>
-        <% }) %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody id="product-table">
+          <% if (!products || products.length === 0) { %>
+            <tr>
+              <td colspan="6" class="text-center text-muted py-4">
+                No products yet. Click <strong>Add Product</strong> to create one.
+              </td>
+            </tr>
+          <% } %>
+          <% (products || []).forEach(function(p){ %>
+            <tr data-id="<%= p.id %>" data-image="<%= p.imageUrl || '' %>">
+              <td>
+                <img
+                  src="<%= p.imageUrl && p.imageUrl.length ? p.imageUrl : '/images/placeholder-80.png' %>"
+                  alt="<%= p.name ? (p.name + ' photo') : 'Product photo' %>"
+                  class="img-thumbnail"
+                  style="width:60px;height:60px;object-fit:cover"
+                  loading="lazy"
+                >
+              </td>
+              <td class="fw-medium"><%= p.name %></td>
+              <td class="text-end"><%= p.price %></td>
+              <td><%= p.color %></td>
+              <td class="text-truncate" style="max-width: 360px;"><%= p.description || '' %></td>
+              <td class="text-nowrap">
+                <button class="btn btn-sm btn-outline-secondary btn-edit" type="button" aria-label="Edit product">Edit</button>
+                <button class="btn btn-sm btn-outline-danger btn-delete" type="button" aria-label="Delete product">Delete</button>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <!-- Modal Form -->
@@ -56,7 +72,7 @@
             </div>
             <div class="mb-3">
               <label class="form-label">Price</label>
-              <input id="price" name="price" type="number" step="0.01" class="form-control" required>
+              <input id="price" name="price" type="number" step="0.01" min="0" class="form-control" required>
             </div>
             <div class="mb-3">
               <label class="form-label">Color</label>
@@ -71,7 +87,7 @@
               <input id="imageFile" name="imageFile" type="file" accept="image/*" class="form-control">
               <input type="hidden" id="imageUrl" name="imageUrl">
               <div class="mt-2">
-                <img id="img-preview" src="/images/placeholder-80.png" alt="preview" class="img-thumbnail" style="width:120px;height:120px;object-fit:cover">
+                <img id="img-preview" src="/images/placeholder-80.png" alt="Image preview" class="img-thumbnail" style="width:120px;height:120px;object-fit:cover">
               </div>
             </div>
           </div>
