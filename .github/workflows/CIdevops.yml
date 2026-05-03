@@ -121,7 +121,7 @@ jobs:
     # ✅ REQUIRED APPROVAL (QUAN TRỌNG NHẤT)
     environment:
       name: production
-      url: https://devoops.com
+      url: https://devoops.shop
 
     steps:
       - name: Deploy to Production with rollback
@@ -141,3 +141,26 @@ jobs:
 
             kubectl rollout status deployment/midterm-web-deployment -n default || \
             (echo "Rollback..." && kubectl rollout undo deployment/midterm-web-deployment)
+
+             # 3. HEALTH CHECK 
+            echo "Starting Health Check..."
+            APP_URL="https://devoops.shop
+            MAX_RETRIES=5
+            INTERVAL=10
+            
+            for i in $(seq 1 $MAX_RETRIES); do
+              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" $APP_URL || echo "000")
+              
+              if [ "$HTTP_CODE" -eq 200 ]; then
+                echo "✅ Health check passed (HTTP 200)!"
+                exit 0
+              fi
+              
+              echo "⚠️ Attempt $i: App returned $HTTP_CODE. Retrying in ${INTERVAL}s..."
+              sleep $INTERVAL
+            done
+
+            echo "❌ Health check failed after $MAX_RETRIES attempts!"
+            echo "Initiating Rollback..."
+            kubectl rollout undo deployment/midterm-web-deployment
+            exit 1
