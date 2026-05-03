@@ -4,7 +4,7 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "build": "echo \"No build step\"",
+    "build": "npm prune --production && mkdir -p dist && cp -r . dist",
     "start": "node main.js",
     "dev": "nodemon main.js",
     "test": "jest",
