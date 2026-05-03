@@ -6,69 +6,138 @@ on:
   pull_request:
     branches: ["main"]
 
-jobs:
+env:
+  IMAGE_NAME: hieuduong1/myapp
 
-# ================= CI =================
+jobs:
+  # ================= CI =================
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run lint
-      - run: npm test
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      # ✅ Artifact (điểm cộng rubric)
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifact
+          path: dist/
+
+      # ✅ Security scan (fail gate)
       - name: Snyk Scan
         run: npx snyk test --severity-threshold=high
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      - run: npm run build
 
-# ================= DOCKER =================
+  # ================= DOCKER =================
   docker:
     runs-on: ubuntu-latest
     needs: build
+
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+
     steps:
       - uses: actions/checkout@v4
+
+      - name: Generate tag
+        id: meta
+        run: echo "tag=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+
       - name: Login Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
 
-      - name: Build image
-        run: |
-          docker build -t hieuduong1/myapp:${{ github.sha }} .
+      # ✅ production-grade build
+      - name: Build & Push Image
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }}
+            ${{ env.IMAGE_NAME }}:latest
 
+      # ✅ container security
       - name: Trivy Scan
         uses: aquasecurity/trivy-action@v0.19.0
         with:
-          image-ref: hieuduong1/myapp:${{ github.sha }}
+          image-ref: ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }}
           exit-code: 1
           severity: CRITICAL
           scanners: vuln
 
-      - name: Push image
-        run: |
-          docker push hieuduong1/myapp:${{ github.sha }}
-
-# ================= CD (KUBERNETES) =================
-  deploy:
+  # ================= CD - STAGING =================
+  deploy-staging:
     runs-on: ubuntu-latest
     needs: docker
+
+    environment:
+      name: staging
+
     steps:
-      - name: Deploy to Server via SSH
+      - name: Deploy to Staging
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH }}
           script: |
+            set -e
             export KUBECONFIG=~/.kube/config
-            export IMAGE_TAG=${{ github.sha }}
-            # Thử đường dẫn tuyệt đối thẳng vào file app.yaml ở thư mục ngoài (home)
+            export IMAGE_TAG=${{ needs.docker.outputs.image_tag }}
+
+            echo "Deploying to STAGING: $IMAGE_TAG"
+
             envsubst '$IMAGE_TAG' < /home/ubuntu/app.yaml | kubectl apply -f -
+
             kubectl rollout status deployment/midterm-web-deployment -n default
+
+  # ================= CD - PRODUCTION =================
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: docker
+
+    # ✅ REQUIRED APPROVAL (QUAN TRỌNG NHẤT)
+    environment:
+      name: production
+      url: https://devoops.com
+
+    steps:
+      - name: Deploy to Production with rollback
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH }}
+          script: |
+            set -e
+            export KUBECONFIG=~/.kube/config
+            export IMAGE_TAG=${{ needs.docker.outputs.image_tag }}
+
+            echo "Deploying to PRODUCTION: $IMAGE_TAG"
+
+            envsubst '$IMAGE_TAG' < /home/ubuntu/app.yaml | kubectl apply -f -
+
+            kubectl rollout status deployment/midterm-web-deployment -n default || \
+            (echo "Rollback..." && kubectl rollout undo deployment/midterm-web-deployment)

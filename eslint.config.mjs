@@ -10,7 +10,7 @@ export default defineConfig([
     languageOptions: {
       sourceType: "commonjs",
       globals: {
-        ...globals.node, // ✅ FIX chính
+        ...globals.node, 
       },
     },
   },
